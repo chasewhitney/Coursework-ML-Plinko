@@ -33,9 +33,25 @@ function knn(data, point, k){
     .value();
 }
 
+function minMax(data, featureCount){
+  const clonedData = _.cloneDeep(data);
+
+  for(let i = 0; i < featureCount; i++){
+    const column = clonedData.map(row => row[i]);
+    const min = _.min(column);
+    const max = _.max(column);
+
+    for(let j = 0; j < clonedData.length; j++){
+      clonedData[j][i] = (clonedData[j][i] - min) / (max - min);
+    }
+  }
+  return clonedData;
+}
+
+
 function runAnalysis() {
   const testSetSize = 100;
-  const [testSet, trainingSet] = splitDataSet(outputs, testSetSize);
+  const [testSet, trainingSet] = splitDataSet(minMax(outputs, 3), testSetSize);
 
   _.range(1,21).forEach(k => {
     const accuracy = _.chain(testSet)
@@ -45,6 +61,4 @@ function runAnalysis() {
       .value()
     console.log(k,'Accuracy is', accuracy);
   });
-
-
 }
