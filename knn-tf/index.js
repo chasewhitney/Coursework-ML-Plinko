@@ -7,7 +7,7 @@ let { features, labels, testFeatures, testLabels} = loadCSV(
   {
     shuffle: true,
     splitTest: 10,
-    dataColumns: ['lat', 'long'],
+    dataColumns: ['lat', 'long', 'sqft_lot'],
     labelColumns: ['price']
   }
 );
@@ -17,8 +17,13 @@ labels = tf.tensor(labels);
 
 
 function knn(features, labels, predictionPoint, k){
+  const { mean, variance } = tf.moments(features, 0);
+  const scaledPredictionPoint = predictionPoint.sub(mean).div(variance.pow(.5))
+
   return features
-    .sub(predictionPoint)
+    .sub(mean)
+    .div(variance.pow(.5))
+    .sub(scaledPredictionPoint)
     .pow(2)
     .sum(1)
     .pow(0.5)
@@ -31,7 +36,9 @@ function knn(features, labels, predictionPoint, k){
     /k
 };
 
-const result = knn(features, labels, testLabels[0], 10);
-const err = ((testLabels[0][0] - result) / testLabels[0][0]) * 100;
-console.log('Guess:', result, 'Actual:', testLabels[0][0]);
-console.log(`Error is ${err}%`);
+testFeatures.forEach((testPoint, i)=>{
+  const result = knn(features, labels, tf.tensor(testPoint), 10);
+  const err = ((testLabels[i][0] - result) / testLabels[i][0]) * 100;
+  console.log('Guess:', result, 'Actual:', testLabels[i][0]);
+  console.log(`Error is ${err}%`);
+});
