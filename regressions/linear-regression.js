@@ -65,12 +65,8 @@ class LinearRegression {
       this.gradientDescent();
       this.recordMSE();
       this.updateLearningRate();
-      console.log(this.options.learningRate);
     }
-      console.log('Final gradients:');
-      this.gradients.print();
-      console.log('Final weights:');
-      this.weights.print();
+
   }
 
   test(testFeatures, testLabels) {
