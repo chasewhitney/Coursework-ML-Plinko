@@ -3,6 +3,8 @@ const tf = require('@tensorflow/tfjs');
 const loadCSV = require('./load-csv');
 const LinearRegression = require('./linear-regression');
 const plot = require('node-remote-plot');
+const getHeaders = require('./extractHeaders');
+
 
 let { features, labels, testFeatures, testLabels} = loadCSV('./cars.csv', {
   shuffle: true,
