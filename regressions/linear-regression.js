@@ -5,8 +5,9 @@ class LinearRegression {
   constructor(features, labels, options) {
     this.features = this.processFeatures(features);
     this.labels = tf.tensor(labels);
-    this.options = Object.assign({ learningRate: 0.1, iterations: 1000 }, options);
+    this.mseHistory = [];
 
+    this.options = Object.assign({ learningRate: 0.1, iterations: 1000 }, options);
     this.weights = tf.zeros([this.features.shape[1],1]);
 
   }
@@ -20,10 +21,11 @@ class LinearRegression {
       .matMul(differences)
       .div(this.features.shape[0]);
 
+    this.gradients = gradients;
     this.weights = this.weights.sub(gradients.mul(this.options.learningRate));
   }
 
-  processFeatures(features){
+  processFeatures(features) {
     features = tf.tensor(features);
 
     if(this.mean && this.variance) {
@@ -35,6 +37,18 @@ class LinearRegression {
     features = tf.ones([features.shape[0], 1]).concat(features, 1);
 
     return features;
+  }
+
+  recordMSE() {
+    const mse = this.features
+      .matMul(this.weights)
+      .sub(this.labels)
+      .pow(2)
+      .sum()
+      .div(this.features.shape[0])
+      .get()
+
+    this.mseHistory.unshift(mse);
   }
 
   standardize(features){
@@ -49,7 +63,14 @@ class LinearRegression {
   train() {
     for (let i = 0; i < this.options.iterations; i++){
       this.gradientDescent();
+      this.recordMSE();
+      this.updateLearningRate();
+      console.log(this.options.learningRate);
     }
+      console.log('Final gradients:');
+      this.gradients.print();
+      console.log('Final weights:');
+      this.weights.print();
   }
 
   test(testFeatures, testLabels) {
@@ -61,6 +82,16 @@ class LinearRegression {
     const tot = testLabels.sub(testLabels.mean()).pow(2).sum().get();
 
     return 1 - res / tot;
+  }
+
+  updateLearningRate(){
+    if(this.mseHistory.length < 2) { return; }
+
+    if (this.mseHistory[0] > this.mseHistory[1]){
+      this.options.learningRate /= 2;
+    } else {
+      this.options.learningRate *= 1.05;
+    }
   }
 
 }
