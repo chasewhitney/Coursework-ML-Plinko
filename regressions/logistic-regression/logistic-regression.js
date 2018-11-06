@@ -5,9 +5,9 @@ class LogisticRegression {
   constructor(features, labels, options) {
     this.features = this.processFeatures(features);
     this.labels = tf.tensor(labels);
-    this.mseHistory = [];
+    this.costHistory = [];
 
-    this.options = Object.assign({ learningRate: 0.1, iterations: 1000, batchSize: 10 }, options);
+    this.options = Object.assign({ learningRate: 0.1, iterations: 1000, batchSize: 10, decisionBoundary: 0.5 }, options);
     this.weights = tf.zeros([this.features.shape[1],1]);
 
   }
@@ -26,7 +26,11 @@ class LogisticRegression {
   }
 
   predict(observations) {
-    return this.processFeatures(observations).matMul(this.weights).sigmoid();
+    return this.processFeatures(observations)
+      .matMul(this.weights)
+      .sigmoid()
+      .greater(this.options.decisionBoundary)
+      .cast('float32');
   }
 
   processFeatures(features) {
@@ -43,16 +47,15 @@ class LogisticRegression {
     return features;
   }
 
-  recordMSE() {
-    const mse = this.features
-      .matMul(this.weights)
-      .sub(this.labels)
-      .pow(2)
-      .sum()
-      .div(this.features.shape[0])
-      .get()
+  recordCost() {
+    // -(1/n) * (Actual.T * log(Guesses) + (1-Actual).T) * log(1-Guesses)
+    const guesses = this.features.matMul(this.weights).sigmoid();
+    const termOne = this.labels.transpose().matMul(guesses.log());
+    const termTwo = this.labels.mul(-1).add(1).transpose().matMul(guesses.mul(-1).add(1).log());
 
-    this.mseHistory.unshift(mse);
+    const cost = termOne.add(termTwo).div(this.features.shape[0]).mul(-1).get(0,0);
+
+    this.costHistory.unshift(cost);
   }
 
   standardize(features){
@@ -84,14 +87,14 @@ class LogisticRegression {
       }
 
 
-      this.recordMSE();
+      this.recordCost();
       this.updateLearningRate();
     }
 
   }
 
   test(testFeatures, testLabels) {
-    const predictions = this.predict(testFeatures).round();
+    const predictions = this.predict(testFeatures);
     testLabels = tf.tensor(testLabels);
     const incorrect = predictions.sub(testLabels).abs().sum().get();
 
@@ -99,9 +102,9 @@ class LogisticRegression {
   }
 
   updateLearningRate(){
-    if(this.mseHistory.length < 2) { return; }
+    if(this.costHistory.length < 2) { return; }
 
-    if (this.mseHistory[0] > this.mseHistory[1]){
+    if (this.costHistory[0] > this.costHistory[1]){
       this.options.learningRate /= 2;
     } else {
       this.options.learningRate *= 1.05;
