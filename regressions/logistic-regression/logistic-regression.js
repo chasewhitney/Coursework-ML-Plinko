@@ -1,7 +1,7 @@
 const tf = require('@tensorflow/tfjs');
 const _ = require('lodash');
 
-class LinearRegression {
+class LogisticRegression {
   constructor(features, labels, options) {
     this.features = this.processFeatures(features);
     this.labels = tf.tensor(labels);
@@ -13,7 +13,7 @@ class LinearRegression {
   }
 
   gradientDescent(features, labels) {
-    const currentGuesses = features.matMul(this.weights);
+    const currentGuesses = features.matMul(this.weights).sigmoid();
     const differences = currentGuesses.sub(labels);
 
     const gradients = features
@@ -26,7 +26,7 @@ class LinearRegression {
   }
 
   predict(observations) {
-    return this.processFeatures(observations).matMul(this.weights);
+    return this.processFeatures(observations).matMul(this.weights).sigmoid();
   }
 
   processFeatures(features) {
@@ -90,16 +90,16 @@ class LinearRegression {
 
   }
 
-  test(testFeatures, testLabels) {
-    testFeatures = this.processFeatures(testFeatures);
-    testLabels = tf.tensor(testLabels);
-
-    const predictions = testFeatures.matMul(this.weights);
-    const res = testLabels.sub(predictions).pow(2).sum().get();
-    const tot = testLabels.sub(testLabels.mean()).pow(2).sum().get();
-
-    return 1 - res / tot;
-  }
+  // test(testFeatures, testLabels) {
+  //   testFeatures = this.processFeatures(testFeatures);
+  //   testLabels = tf.tensor(testLabels);
+  //
+  //   const predictions = testFeatures.matMul(this.weights);
+  //   const res = testLabels.sub(predictions).pow(2).sum().get();
+  //   const tot = testLabels.sub(testLabels.mean()).pow(2).sum().get();
+  //
+  //   return 1 - res / tot;
+  // }
 
   updateLearningRate(){
     if(this.mseHistory.length < 2) { return; }
@@ -113,4 +113,4 @@ class LinearRegression {
 
 }
 
-module.exports = LinearRegression;
+module.exports = LogisticRegression;
