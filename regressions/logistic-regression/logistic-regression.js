@@ -90,16 +90,13 @@ class LogisticRegression {
 
   }
 
-  // test(testFeatures, testLabels) {
-  //   testFeatures = this.processFeatures(testFeatures);
-  //   testLabels = tf.tensor(testLabels);
-  //
-  //   const predictions = testFeatures.matMul(this.weights);
-  //   const res = testLabels.sub(predictions).pow(2).sum().get();
-  //   const tot = testLabels.sub(testLabels.mean()).pow(2).sum().get();
-  //
-  //   return 1 - res / tot;
-  // }
+  test(testFeatures, testLabels) {
+    const predictions = this.predict(testFeatures).round();
+    testLabels = tf.tensor(testLabels);
+    const incorrect = predictions.sub(testLabels).abs().sum().get();
+
+    return (predictions.shape[0] - incorrect) / predictions.shape[0];
+  }
 
   updateLearningRate(){
     if(this.mseHistory.length < 2) { return; }
