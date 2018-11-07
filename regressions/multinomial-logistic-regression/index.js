@@ -25,14 +25,11 @@ function encode(labels) {
 const encodedLabels = encode(labels);
 const encodedTestLabels = encode(testLabels);
 
-
-
 const regression = new LogisticRegression(features, encodedLabels, {
   learningRate: 5,
-  iterations: 100,
-  batchSize: 100,
+  iterations: 20,
+  batchSize: 1,
 });
-
 regression.train(features, labels);
 const accuracy = regression.test(testFeatures, encodedTestLabels);
 
