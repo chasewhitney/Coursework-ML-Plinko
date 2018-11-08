@@ -49,9 +49,10 @@ class LogisticRegression {
   recordCost() {
     // -(1/n) * (Actual.T * log(Guesses) + (1-Actual).T) * log(1-Guesses)
     const cost = tf.tidy(()=>{
+
       const guesses = this.features.matMul(this.weights).softmax();
       const termOne = this.labels.transpose().matMul(guesses.log());
-      const termTwo = this.labels.mul(-1).add(1).transpose().matMul(guesses.mul(-1).add(1).log());
+      const termTwo = this.labels.mul(-1).add(1).transpose().matMul(guesses.mul(-1).add(1).add(1e-7).log());
 
       return termOne.add(termTwo).div(this.features.shape[0]).mul(-1).get(0,0);
     });

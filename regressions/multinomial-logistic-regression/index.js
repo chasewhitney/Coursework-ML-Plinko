@@ -8,7 +8,7 @@ const mnist = require('mnist-data');
 
 function loadData() {
 
-  const mnistData = mnist.training(0,60000);
+  const mnistData = mnist.training(0,20000);
   const features = mnistData.images.values.map(image => _.flatMap(image));
   const labels = mnistData.labels.values;
   const encodedLabels = encode(labels);
@@ -28,7 +28,7 @@ regression.train(features, encodedLabels);
 
 ////////////////////////////////////////////////////
 // Testing
-const mnistTest = mnist.testing(0,1000);
+const mnistTest = mnist.testing(0,3000);
 
 const testFeatures = mnistTest.images.values.map(image => _.flatMap(image));
 const testLabels = mnistTest.labels.values;
