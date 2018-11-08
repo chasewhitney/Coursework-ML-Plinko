@@ -22,7 +22,7 @@ class LogisticRegression {
       .div(features.shape[0]);
 
     this.gradients = gradients;
-    this.weights = this.weights.sub(gradients.mul(this.options.learningRate));
+    return this.weights.sub(gradients.mul(this.options.learningRate));
   }
 
   predict(observations) {
@@ -48,12 +48,13 @@ class LogisticRegression {
 
   recordCost() {
     // -(1/n) * (Actual.T * log(Guesses) + (1-Actual).T) * log(1-Guesses)
-    const guesses = this.features.matMul(this.weights).softmax();
-    const termOne = this.labels.transpose().matMul(guesses.log());
-    const termTwo = this.labels.mul(-1).add(1).transpose().matMul(guesses.mul(-1).add(1).log());
+    const cost = tf.tidy(()=>{
+      const guesses = this.features.matMul(this.weights).softmax();
+      const termOne = this.labels.transpose().matMul(guesses.log());
+      const termTwo = this.labels.mul(-1).add(1).transpose().matMul(guesses.mul(-1).add(1).log());
 
-    const cost = termOne.add(termTwo).div(this.features.shape[0]).mul(-1).get(0,0);
-
+      return termOne.add(termTwo).div(this.features.shape[0]).mul(-1).get(0,0);
+    });
     this.costHistory.unshift(cost);
   }
 
@@ -75,15 +76,17 @@ class LogisticRegression {
         const startIndex = j * this.options.batchSize;
         const { batchSize } = this.options;
 
-        const featureSlice = this.features.slice(
-          [startIndex, 0], [batchSize, -1]
-        );
+        this.weights = tf.tidy( () => {
+          const featureSlice = this.features.slice(
+            [startIndex, 0], [batchSize, -1]
+          );
 
-        const labelSlice = this.labels.slice(
-          [startIndex, 0], [batchSize, -1]
-        );
+          const labelSlice = this.labels.slice(
+            [startIndex, 0], [batchSize, -1]
+          );
 
-        this.gradientDescent(featureSlice, labelSlice);
+          return this.gradientDescent(featureSlice, labelSlice);
+        })
       }
 
 

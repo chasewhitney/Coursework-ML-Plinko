@@ -6,13 +6,43 @@ const plot = require('node-remote-plot');
 const _ = require('lodash');
 const mnist = require('mnist-data');
 
-mnistData = mnist.training(0,1000);
-mnistTest = mnist.testing(0,100);
+function loadData() {
 
-const features = mnistData.images.values.map(image => _.flatMap(image));
-const labels = mnistData.labels.values;
+  const mnistData = mnist.training(0,60000);
+  const features = mnistData.images.values.map(image => _.flatMap(image));
+  const labels = mnistData.labels.values;
+  const encodedLabels = encode(labels);
+
+  return { features, encodedLabels };
+}
+
+const { features, encodedLabels} = loadData();
+
+const regression = new LogisticRegression(features, encodedLabels, {
+  learningRate: 1,
+  iterations: 20,
+  batchSize: 100,
+});
+
+regression.train(features, encodedLabels);
+
+////////////////////////////////////////////////////
+// Testing
+const mnistTest = mnist.testing(0,1000);
+
 const testFeatures = mnistTest.images.values.map(image => _.flatMap(image));
 const testLabels = mnistTest.labels.values;
+const encodedTestLabels = encode(testLabels);
+const accuracy = regression.test(testFeatures, encodedTestLabels);
+
+console.log('Accuracy is:', accuracy);
+
+// Memory start
+// 170 mb total
+// 151 mb
+// 12 mb
+
+// --max-old-space-size=4090
 
 function encode(labels) {
   return labels.map((v)=>{
@@ -22,22 +52,7 @@ function encode(labels) {
   });
 }
 
-const encodedLabels = encode(labels);
-const encodedTestLabels = encode(testLabels);
-
-const regression = new LogisticRegression(features, encodedLabels, {
-  learningRate: 5,
-  iterations: 20,
-  batchSize: 1,
-});
-regression.train(features, labels);
-const accuracy = regression.test(testFeatures, encodedTestLabels);
-
-console.log('Accuracy is:', accuracy);
-
-
-
-
+debugger;
 
 
 
