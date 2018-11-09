@@ -8,7 +8,7 @@ const mnist = require('mnist-data');
 
 function loadData() {
 
-  const mnistData = mnist.training(0,20000);
+  const mnistData = mnist.training(0,60000);
   const features = mnistData.images.values.map(image => _.flatMap(image));
   const labels = mnistData.labels.values;
   const encodedLabels = encode(labels);
@@ -20,15 +20,14 @@ const { features, encodedLabels} = loadData();
 
 const regression = new LogisticRegression(features, encodedLabels, {
   learningRate: 1,
-  iterations: 20,
-  batchSize: 100,
+  iterations: 40,
+  batchSize: 500,
 });
 
 regression.train(features, encodedLabels);
 
-////////////////////////////////////////////////////
 // Testing
-const mnistTest = mnist.testing(0,3000);
+const mnistTest = mnist.testing(0,10000);
 
 const testFeatures = mnistTest.images.values.map(image => _.flatMap(image));
 const testLabels = mnistTest.labels.values;
@@ -36,13 +35,6 @@ const encodedTestLabels = encode(testLabels);
 const accuracy = regression.test(testFeatures, encodedTestLabels);
 
 console.log('Accuracy is:', accuracy);
-
-// Memory start
-// 170 mb total
-// 151 mb
-// 12 mb
-
-// --max-old-space-size=4090
 
 function encode(labels) {
   return labels.map((v)=>{
@@ -52,20 +44,8 @@ function encode(labels) {
   });
 }
 
-debugger;
 
-
-
-
-
-
-
-
-
-
-
-
-
+// Data from cars.csv
 // const { features, labels, testFeatures, testLabels } = loadCSV('../data/cars.csv', {
 //   dataColumns: ['horsepower', 'displacement', 'weight'],
 //   labelColumns: ['mpg'],
